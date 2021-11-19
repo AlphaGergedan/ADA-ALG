@@ -1,4 +1,5 @@
 #include "point2D.hpp"
+#include <math.h>
 
 Point2D::Point2D(float x, float y) {
   this->x = x;
@@ -33,15 +34,12 @@ void Point2D::sort_orderY(Point2D s[], int n) {
   mergesort(s, 0, n+1, 'Y');
 }
 
-
-float Point2D::dist2D_L1(Point2D p1, Point2D p2) {
-  //TODO compute the L1 == Manhattan distance
-  return 0;
+float Point2D::dist2D_L1(Point2D p) {
+  return abs(this->x - p.x) + abs(this->y - p.y);
 }
 
-float Point2D::dist2D_L2(Point2D p1, Point2D p2) {
-  //TODO compute the L2 == Euclidean distance
-  return 0;
+float Point2D::dist2D_L2(Point2D p) {
+  return sqrtf(pow(this->x - p.x, 2) + pow(this->y - p.y, 2));
 }
 
 float Point2D::getX() {
