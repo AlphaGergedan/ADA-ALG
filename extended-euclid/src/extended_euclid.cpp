@@ -1,7 +1,9 @@
 #include "extended_euclid.hpp"
 
 /**
- * Extended Euclid Algorithm
+ * Extended Euclid Algorithm : O(log n). Naive GCD is in O(n).
+ * We modify the algorithm a little to also return two additional
+ * integers with the following property.
  *
  * Note (*) that: GCD(a,b) = GDC(b, a mod b)
  *
