@@ -14,16 +14,35 @@ namespace Treap {
     Pair p;
     Node *left;
     Node *right;
+    Node *parent;
   };
 
+  /**
+   * Some inline functions for better readability in the implementation.
+   */
   inline unsigned int key(Node *n) {
     return n->p.key;
   }
-
   inline unsigned int prio(Node *n) {
     return n->p.prio;
   }
+  inline Node* parent(Node *n) {
+    return n->parent;
+  }
+  inline Node* left(Node *n) {
+    return n->left;
+  }
+  inline Node* right(Node *n) {
+    return n->right;
+  }
+  inline bool isLeaf(Node *n) {
+    return !(right(n) || left(n));
+  }
 
+  /**
+   * TODO
+   *
+   */
   class Treap {
   public:
     Treap();
