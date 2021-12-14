@@ -1,73 +1,103 @@
 /**
- * Implementation of treap.hpp
+ * @file treap.cpp
+ * @brief Implementation of treap.hpp
+ * @author Atamert Rahma, atamertiel@gmail.com
  */
 
 #include "treap.hpp"
 #include <iostream>
 
+/**
+ * Initializes an empty leaf.
+ */
 Treap::Treap::Treap() {
   this->root = new Node();
-  this->root->left = nullptr;
-  this->root->right = nullptr;
-  this->root->parent= nullptr;
-}
-
-Treap::Treap::Treap(Node *root) {
-  if (parent(root)) {
-    std::cerr << "The given node has a parent node so it cannot be a root.";
-  }
-  this->root = root;
-}
-
-void Treap::Treap::print() {
-  int depth = this->getMaxDepth();
-  // TODO
 }
 
 /**
+ * Initializes a Treap from the given node (root).
+ * @param root    Pointer to a node, must not be empty or have parent.
+ */
+Treap::Treap::Treap(Node *root) {
+  if (!root) {
+    /* Initializes an empty leaf. */
+    this->root = new Node();
+  }
+  else {
+    if (parent(root)) {
+      std::cerr << "The given node has a parent node so it cannot be a root.";
+    }
+    else if (isEmptyLeaf(root)) {
+      std::cerr << "The given node is an empty leaf!";
+    }
+    else {
+      this->root = root;
+    }
+  }
+}
+
+/**
+ * Search for the node that has the given key value.
  *
  * Time: O(#elements-on-the-search-path)
+ * Expected Running Time: O(log n)
+ *
+ * @param k     Integer key value to search in the treap.
+ * @return v    Pointer to the Node with the key value k or
+ *              the empty leaf where the search ends
+ *              (fails because the element does not exist).
  */
-Treap::Node* Treap::Treap::searchKey(unsigned int k) {
+Treap::Node* Treap::Treap::searchKey(int k) {
   Node *v = this->root;
-  while (v) {
+  while (!isEmptyLeaf(v)) {
+    /* element found */
     if (key(v) == k) {
       return v;
     }
+    /* element resides in the right subtree of v */
     else if (key(v) < k) {
-      /* search tree property */
       v = v->right;
     }
+    /* element resides in the left subtree of v */
     else {
       v = v->left;
     }
   }
-  /* element not found */
+  /* element not found. Return empty leaf. */
   return v;
 }
 
 /**
- * Recursive search implementation.
+ * Search for the node that has the given key value.
+ * Recursive implementation.
  *
  * Time: O(#elements-on-the-search-path)
+ * Expected Running Time: O(log n)
  *
  * @param n     Pointer to the search root
- * @param k     key that we are searching
- * @return      Pointer to the node that contains the key 'k' or nullptr
+ *              (where the search starts).
+ * @param k     Integer key value to search in the treap.
+ * @return n    Pointer to the Node with the key value k or
+ *              the empty leaf where the search ends
+ *              (fails because the element does not exist).
  */
-Treap::Node* Treap::Treap::searchKey(Node *n, unsigned int k) {
-  if (n) {
+Treap::Node* Treap::Treap::searchKey(Node *n, int k) {
+  if (!isEmptyLeaf(n)) {
+    /* element resides in the right subtree of n */
     if (k > key(n)) {
-      searchKey(n->right, k);
+      return searchKey(n->right, k);
     }
+    /* element resides in the left subtree of n */
     else if (k < key(n)) {
-      searchKey(n->left, k);
+      return searchKey(n->left, k);
     }
+    /* element found */
     else {
       return n;
     }
   }
-  return nullptr;
+  /* element not found. Return empty leaf. */
+  return n;
 }
 
 void Treap::Treap::insertNode(Node *n) {
