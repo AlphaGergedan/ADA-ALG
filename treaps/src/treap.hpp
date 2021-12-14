@@ -126,6 +126,40 @@ namespace Treap {
     void rotateRight(Node *n);
   };
 
+  /**
+   * Performs left rotation around the given node n.
+   * Precondition: right of n is not empty
+   */
+  void Treap::rotateLeft(Node *n) {
+    Node *right = n->right;
+    if (isEmptyLeaf(right)) { return; }
+
+    /* fix the new right of n */
+    n->right = right->left;
+    right->left->parent = n;
+
+    /* make the old right of n parent of n */
+    right->parent = n->parent;
+    n->parent = right;
+  }
+
+  /**
+   * Performs right rotation around the given node n.
+   * Precondition: left of n is not empty
+   */
+  void Treap::rotateRight(Node *n) {
+    Node *left = n->left;
+    if (isEmptyLeaf(left)) { return; }
+
+    /* fix the new left of n */
+    n->left = left->right;
+    left->right->parent = n;
+
+    /* make the old left of n parent of n */
+    left->parent = n->parent;
+    n->parent = left;
+  }
+
   Node* min(Treap *t);
   Node* max(Treap *t);
   Node* list(Treap *t);
