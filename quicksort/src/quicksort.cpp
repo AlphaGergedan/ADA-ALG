@@ -1,5 +1,10 @@
 #include "quicksort.hpp"
 
+/**
+ * Swaps two numbers given by their indices i and j
+ *
+ * @param i,j indices of the numbers
+ */
 void swap(int arr[], int i, int j) {
     int tmp = arr[i];
     arr[i] = arr[j];
@@ -22,18 +27,15 @@ int partition(int arr[], int a, int b, int splitter_index) {
 }
 
 void _quick(int arr[], int a, int b) {
-    /* Base case is a >= b */
-
-    /**/
     if (a < b) {
         /* Select the last element as the splitter element */
         int splitter_index = b;
 
         /* Divide Step: Partition the array into left and right
-         * and returns the index of the splitter element. Left
+         * and return the index of the splitter element. Left
          * part should be smaller and right part should be greater
          * than the splitter element. */
-        int splitter_position = partition(arr, a, b, b);
+        int splitter_position = partition(arr, a, b, splitter_index);
 
         _quick(arr, a, splitter_position - 1);
         _quick(arr, splitter_position + 1, b);
@@ -43,4 +45,3 @@ void _quick(int arr[], int a, int b) {
 void quicksort(int arr[], int n) {
     _quick(arr, 0, n-1);
 }
-
