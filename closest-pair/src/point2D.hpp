@@ -28,11 +28,4 @@ private:
 void sort_orderX(Point2D *s[], int n);
 void sort_orderY(Point2D *s[], int n);
 
-/* Print a list of points */
-void toString(Point2D *s[], int size) {
-  for (int i = 0; i < size; i++) {
-    std::cout << "[" << i << "] <- "; s[i]->toString(); std::cout << std::endl;
-  }
-}
-
 #endif
