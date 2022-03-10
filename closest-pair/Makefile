@@ -17,7 +17,7 @@ closest-pair.o:
 closest-pair: point.o closest-pair.o
 	g++ ${FLAGS} build/point2D.o build/closestPair.o -o build/closestPair
 
-main:
+main: closest-pair
 
 test: point.o
 	g++ ${FLAGS} src/test.cpp build/point2D.o -o build/test
