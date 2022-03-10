@@ -1,5 +1,5 @@
 #include "point2D.hpp"
-#include <math.h>
+#include <cmath>
 
 Point2D::Point2D(float x, float y) {
   this->x = x;
@@ -11,35 +11,81 @@ Point2D Point2D::operator +(const Point2D p) {
 }
 
 Point2D Point2D::operator -(const Point2D p) {
-  return Point2D(this->x - p.x, this->y - y);
+  return Point2D(this->x - p.x, this->y - p.y);
 }
 
-void _mergeX(Point2D s[], int a, int b) {
-  // TODO Implement merging step for X
+void swap(Point2D *s[], int i, int j) {
+  Point2D *tmp = s[i];
+  s[i] = s[j];
+  s[j] = tmp;
 }
 
-void _mergeY(Point2D s[], int a, int b) {
-  // TODO Implement merging step for Y
+int partitionX(Point2D *s[], int a, int b, int splitter_index) {
+    /* Swap the splitter to the end of the list */
+    swap(s, splitter_index, b);
+    /* Index of the partition */
+    int i = a - 1;
+    for (int j = a; j < b; j++) {
+        if (s[j]->getX() < s[b]->getX()) {
+            swap(s, ++i, j);
+        }
+    }
+    /* Place the splitter element into the correct position */
+    swap(s, ++i, b);
+    return i;
 }
 
-void mergesort(Point2D s[], int a, int b, char order) {
-  // TODO implement merge sort
+int partitionY(Point2D *s[], int a, int b, int splitter_index) {
+    /* Swap the splitter to the end of the list */
+    swap(s, splitter_index, b);
+    /* Index of the partition */
+    int i = a - 1;
+    for (int j = a; j < b; j++) {
+        if (s[j]->getY() < s[b]->getY()) {
+            swap(s, ++i, j);
+        }
+    }
+    /* Place the splitter element into the correct position */
+    swap(s, ++i, b);
+    return i;
 }
 
-void Point2D::sort_orderX(Point2D s[], int n) {
-  mergesort(s, 0, n+1, 'X');
+void quicksortX(Point2D *s[], int a, int b) {
+  if (a < b) {
+    int splitter_index = b;
+    int splitter_position = partitionX(s, a, b, splitter_index);
+
+    quicksortX(s, a, splitter_position - 1);
+    quicksortX(s, splitter_position + 1, b);
+  }
 }
 
-void Point2D::sort_orderY(Point2D s[], int n) {
-  mergesort(s, 0, n+1, 'Y');
+void quicksortY(Point2D *s[], int a, int b) {
+  if (a < b) {
+    int splitter_index = b;
+    int splitter_position = partitionY(s, a, b, splitter_index);
+
+    quicksortY(s, a, splitter_position - 1);
+    quicksortY(s, splitter_position + 1, b);
+  }
+}
+
+/* Sorts the given array in order of increasing X-coordinate */
+void sort_orderX(Point2D *s[], int n) {
+  quicksortX(s, 0, n-1);
+}
+
+/* Sorts the given array in order of increasing Y-coordinate */
+void sort_orderY(Point2D *s[], int n) {
+  quicksortY(s, 0, n-1);
 }
 
 float Point2D::dist2D_L1(Point2D p) {
-  return abs(this->x - p.x) + abs(this->y - p.y);
+    return fabs(this->x - p.x) + fabs(this->y - p.y);
 }
 
 float Point2D::dist2D_L2(Point2D p) {
-  return sqrtf(pow(this->x - p.x, 2) + pow(this->y - p.y, 2));
+    return sqrtf(powf(this->x - p.x, 2) + powf(this->y - p.y, 2));
 }
 
 float Point2D::getX() {
@@ -56,4 +102,8 @@ void Point2D::setX(float x) {
 
 void Point2D::setY(float y) {
   this->y = y;
+}
+
+void Point2D::toString() {
+  std::cout << "(" << this->x << "," << this->y << ")" << std::flush;
 }
