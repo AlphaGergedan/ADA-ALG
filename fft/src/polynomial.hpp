@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <math.h>
+
+#define EPSILON 0.001f
 
 class Polynomial {
 public:
@@ -17,6 +20,7 @@ protected:
 };
 
 class Coef : virtual Polynomial {
+public:
   /**
    * Constructor for coefficient representation
    * p(x) = a_n * x^n + ... + a_1 * x^1 + a_0
@@ -54,7 +58,7 @@ class Coef : virtual Polynomial {
    * Addition in coefficient form is in O(maxDegree).
    * Simply add the coefficients.
    */
-  Coef& operator +(Coef&p) {
+  Coef& operator +(Coef &p) {
     int maxDegree = std::max(this->getDegree(), p.getDegree());
     int minDegree = std::min(this->getDegree(), p.getDegree());
     float *a = new float[maxDegree+1];
@@ -86,7 +90,7 @@ class Coef : virtual Polynomial {
    * of polynomials can be done in linear time, therefore substraction is also
    * in O(maxDegree);
    */
-  Coef& operator -(Coef&p) {
+  Coef& operator -(Coef &p) {
     Coef &pNeg = -p;
     Coef &retVal = (*this) + pNeg;
     delete &pNeg;
@@ -95,39 +99,70 @@ class Coef : virtual Polynomial {
 
   /**
    * Naive poly multiplication is in O(n^2).
-   * TODO
    */
-  Polynomial& operator *(Polynomial &p);
+  Coef& operator *(Coef &p) {
+    /* compute the degree */
+    int multDegree = this->getDegree() + p.getDegree();
+    float *a = new float[multDegree + 1];
+    for (int i = 0; i <= multDegree; i++) {
+      a[i] = 0;
+    }
+    for (int i = 0; i <= p.getDegree(); i++) {
+      for (int j = 0; j <= this->getDegree(); j++) {
+        a[i+j] += p.getCoefs()[i] * this->getCoefs()[j];
+      }
+    }
+    Coef *retVal = new Coef(multDegree, a);
+    return *retVal;
+  }
 
-  bool operator ==(Polynomial &p) {
+  /**
+   * Compares the coefficients and degrees, returns true if they match
+   */
+  bool operator ==(Coef &p) {
     if (this->getDegree() != p.getDegree()) {
       return false;
     }
     bool isEqual = true;
     for (int i = 0; i <= p.getDegree(); i++) {
-      bool isCloseEnough = true; // TODO floating point comparison for this->getCoefs()[i] and p.getCoefs()[i]
+      bool isCloseEnough = std::fabs(p.getCoefs()[i] - this->getCoefs()[i]) < EPSILON;
       isEqual = isEqual && isCloseEnough;
     }
     return isEqual;
   }
 
-  /* evaluates the polynomial at n, using Horner's method in O(n) */
+  /* evaluates the polynomial at n, using Horner's method in O(n)
+   * p(x) = a_0 + x(a_1 + x(a_2 + x(a_3 .. (a_n-1 + x a_n ).. )))*/
   float eval(float x) {
-    /* TODO */
-    return 0;
+    // constant polynomial
+    if (this->getDegree() == 0) {
+      return this->getCoefs()[0];
+    }
+
+    // a_n
+    float retVal = this->getCoefs()[this->getDegree()];
+    for (int i = this->getDegree() - 1 ; i >= 0; i--) {
+      /* a_n-1 + x*(a_n) */
+      retVal = this->getCoefs()[i] + x*retVal;
+    }
+    return retVal;
   }
 
   void toString(int precision) {
     int i = 0;
     while (i < this->getDegree()) {
-      std::cout << std::fixed << std::setprecision(precision)
-                << this->getCoefs()[i] << "*x^" << i << " + ";
+      if (this->getCoefs()[i] > 0) {
+        std::cout << std::fixed << std::setprecision(precision)
+                  << this->getCoefs()[i] << "*x^" << i << " + ";
+      }
       i++;
     }
-    std::cout << std::fixed << std::setprecision(precision)
-              << this->getCoefs()[i] << "*x^" << i << std::flush;
+    if (this->getCoefs()[i] > 0) {
+      std::cout << std::fixed << std::setprecision(precision)
+                << this->getCoefs()[i] << "*x^" << i;
+    }
+    std::cout << std::flush;
   }
-
 
   float* getCoefs() { return this->a; };
 
@@ -135,16 +170,10 @@ private:
   /* coefficient representation,
    * a[i] corresponds to the coefficient a_i * x^i */
   float *a = nullptr;
-
-  /* Fast Fourier Transform
-   *
-   * computes DFT of p = (p(w^0),p(w^1),..,p(w^n-1))
-   * Converts coefficient representation to
-   * point-value representation*/
-  float* fft(int n);
 };
 
 class LinFac : virtual Polynomial {
+public:
   /**
    * Constructor for linear factors representation
    * p(x) = b * (x - x_1) * ... * (x - x_n)
@@ -163,6 +192,7 @@ private:
 };
 
 class PV : virtual Polynomial {
+public:
   /**
    * Constructor for point-value representation
    * Any polynomial of degree n is uniquely defined by
@@ -192,5 +222,18 @@ private:
 
   Coef& interpolate();
 };
+
+/**
+ * Polynomial multiplication using FFT
+ * TODO
+ *
+ * computes DFT of p = (p(w^0),p(w^1),..,p(w^n-1))
+ * Converts coefficient representation to
+ * point-value representation
+ */
+Coef& mult_fft(Coef& p, Coef& q) {
+  // TODO
+  return *(new Coef(0,nullptr));
+}
 
 #endif
