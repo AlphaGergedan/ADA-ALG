@@ -5,12 +5,22 @@
 #include <iostream>
 #include <iomanip>
 #include <math.h>
+#include <complex>
 
 #define EPSILON 0.001f
 
 const float euler = std::exp(1.0);
+typedef std::complex<float> comp;
 
 namespace Polynomial {
+  /**
+   * Returns n-th root of unity, e^(2*pi*i / n)
+   */
+  comp getRootUnity(unsigned int n) {
+    comp w_n = std::exp<float>((2i*M_PI) / (n));
+    return w_n;
+  }
+
   class Polynomial {
   public:
     virtual void toString(int precision);
@@ -179,9 +189,70 @@ namespace Polynomial {
      * @param n : power of 2, number of point value pairs
      * @return DFT_n(p)
      */
-    float* fft(int n) {
-      // TODO implement FFT
-      return nullptr;
+    comp* fft(int n) {
+      /* this is not allowed, TODO also check if power of 2 */
+      if (n < this->getDegree()) {
+        return nullptr;
+      }
+      float *a = new float[n];
+      /* initialize coefficient array in O(n) */
+      for (int i = 0; i < n; i++) {
+        if (i < this->getDegree()) {
+          a[i] = this->getCoefs()[i];
+        } else {
+          a[i] = 0;
+        }
+      }
+      return fft_aux(a, n);
+    }
+
+    /**
+     *  Running time:
+     *      T(1) = O(1)
+     *      T(n) = 2T(n/2) + O(n)
+     *           = O(nlogn) using e.g. Guessing and Induction
+     */
+    comp* fft_aux(float *a, int n) {
+      /* base case */
+      if (n == 1) {
+        comp *ret_a = new comp[1];
+        ret_a[0] = a[0];
+        delete[] a;
+        return ret_a;
+      }
+      /* split even and odd coefficients in O(n) */
+      float *a_even = new float[n/2];
+      float *a_odd = new float[n/2];
+      int cnt = 0;
+      for (int i = 0; i < n; i++) {
+        // odd
+        if (i % 2) {
+          a_odd[cnt] = this->getCoefs()[i];
+          cnt++;
+        } else {
+          a_even[cnt] = this->getCoefs()[i];
+        }
+      }
+      /* 2 recursive calls */
+      comp *d_0 = fft_aux(a_even, n/2);
+      comp *d_1 = fft_aux(a_odd, n/2);
+      /* merge step */
+      comp *d = new comp[n];
+      comp w_n = getRootUnity(n);
+      comp w = 1;
+      /* in O(n) */
+      for (int k = 0; k <= (n/2)-1; k++) {
+        d[k] = d_0[k] + w*d_1[k];
+        d[k + n/2] = d_0[k] - w*d_1[k];
+        w *= w_n;
+      }
+      /* cleanup */
+      delete[] a;
+      delete[] a_even;
+      delete[] a_odd;
+      delete[] d_0;
+      delete[] d_1;
+      return d;
     }
 
   private:
@@ -329,6 +400,7 @@ namespace Polynomial {
 
     Coef& interpolate();
   };
+
 
   /**
    * Polynomial multiplication using FFT
