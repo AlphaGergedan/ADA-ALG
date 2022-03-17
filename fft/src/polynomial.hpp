@@ -12,15 +12,26 @@
 const float euler = std::exp(1.0);
 typedef std::complex<float> comp;
 
+/**
+ * Includes polynomial representations and useful functions such as fft
+ */
 namespace Polynomial {
   /**
    * Returns n-th root of unity, e^(2*pi*i / n)
    */
-  comp getRootUnity(unsigned int n) {
-    comp w_n = std::exp<float>((2i*M_PI) / (n));
+  comp getRootUnity(int n) {
+    comp w_n;
+    if (n > 0) {
+      w_n = std::exp<float>((2i*M_PI) / (n));
+    } else {
+      w_n = 1;
+    }
     return w_n;
   }
 
+  /**
+   * Base class for polynomials
+   */
   class Polynomial {
   public:
     virtual void toString(int precision);
@@ -32,7 +43,12 @@ namespace Polynomial {
     int n = -1;
   };
 
-  class Coef : virtual Polynomial {
+  /**
+   * Polynomial in coefficient representation.
+   * p(x) = a_n * x^n + ... + a_1 * x^1 + a_0
+   */
+  template<typename T>
+  class Coef : public virtual Polynomial {
   public:
     /**
      * Constructor for coefficient representation
@@ -41,9 +57,9 @@ namespace Polynomial {
      * @param deg: degree of the polynomial              (n)
      * @param a: array of coefficients of the polynomial [n+1]
      */
-    Coef(int deg, float a[]) {
+    Coef(int deg, T a[]) {
       this->n = deg; // FIXME should be >= 0
-      this->a = new float[deg+1];
+      this->a = new T[deg+1];
       for (int i = 0; i <= deg; i++) {
         this->a[i] = a[i];
       }
@@ -55,8 +71,8 @@ namespace Polynomial {
     /**
      * Multiplication with a constant is in O(n).
      */
-    Coef& operator *(float m) {
-      float *a = new float[this->getDegree()+1];
+    Coef& operator *(T m) {
+      T *a = new T[this->getDegree()+1];
       for (int i = 0; i <= this->getDegree(); i++) {
         a[i] *= this->getCoefs()[i] * m;
       }
@@ -74,7 +90,7 @@ namespace Polynomial {
     Coef& operator +(Coef &p) {
       int maxDegree = std::max(this->getDegree(), p.getDegree());
       int minDegree = std::min(this->getDegree(), p.getDegree());
-      float *a = new float[maxDegree+1];
+      float *a = new T[maxDegree+1];
 
       int i = 0;
       /* add the coefficients */
@@ -116,7 +132,7 @@ namespace Polynomial {
     Coef& operator *(Coef &p) {
       /* compute the degree */
       int multDegree = this->getDegree() + p.getDegree();
-      float *a = new float[multDegree + 1];
+      T *a = new T[multDegree + 1];
       for (int i = 0; i <= multDegree; i++) {
         a[i] = 0;
       }
@@ -146,14 +162,14 @@ namespace Polynomial {
 
     /* evaluates the polynomial at n, using Horner's method in O(n)
      * p(x) = a_0 + x(a_1 + x(a_2 + x(a_3 .. (a_n-1 + x a_n ).. )))*/
-    float eval(float x) {
+    T eval(T x) {
       // constant polynomial
       if (this->getDegree() == 0) {
         return this->getCoefs()[0];
       }
 
       // a_n
-      float retVal = this->getCoefs()[this->getDegree()];
+      T retVal = this->getCoefs()[this->getDegree()];
       for (int i = this->getDegree() - 1 ; i >= 0; i--) {
         /* a_n-1 + x*(a_n) */
         retVal = this->getCoefs()[i] + x*retVal;
@@ -177,7 +193,7 @@ namespace Polynomial {
       std::cout << std::flush;
     }
 
-    float* getCoefs() { return this->a; };
+    T* getCoefs() { return this->a; };
 
     /**
      * Fast Fourier Transform (FFT)
@@ -194,7 +210,7 @@ namespace Polynomial {
       if (n < this->getDegree()) {
         return nullptr;
       }
-      float *a = new float[n];
+      T *a = new T[n];
       /* initialize coefficient array in O(n) */
       for (int i = 0; i < n; i++) {
         if (i < this->getDegree()) {
@@ -206,13 +222,19 @@ namespace Polynomial {
       return fft_aux(a, n);
     }
 
+
+  private:
+    /* coefficient representation,
+     * a[i] corresponds to the coefficient a_i * x^i */
+    T*a = nullptr;
+
     /**
      *  Running time:
      *      T(1) = O(1)
      *      T(n) = 2T(n/2) + O(n)
      *           = O(nlogn) using e.g. Guessing and Induction
      */
-    comp* fft_aux(float *a, int n) {
+    comp* fft_aux(T*a, int n) {
       /* base case */
       if (n == 1) {
         comp *ret_a = new comp[1];
@@ -221,8 +243,8 @@ namespace Polynomial {
         return ret_a;
       }
       /* split even and odd coefficients in O(n) */
-      float *a_even = new float[n/2];
-      float *a_odd = new float[n/2];
+      T *a_even = new T[n/2];
+      T*a_odd = new T[n/2];
       int cnt = 0;
       for (int i = 0; i < n; i++) {
         // odd
@@ -254,18 +276,16 @@ namespace Polynomial {
       delete[] d_1;
       return d;
     }
-
-  private:
-    /* coefficient representation,
-     * a[i] corresponds to the coefficient a_i * x^i */
-    float *a = nullptr;
-
   };
 
   /**
+   * Linear factors representation (fundamental theorem of algebra)
+   * p(x) = b * (x - x_1) * ... * (x - x_n)
+   *
    * TODO use union find in == overload
    */
-  class LinFac : virtual Polynomial {
+  template <typename T>
+  class LinFac : public virtual Polynomial {
   public:
     /**
      * Constructor for linear factors representation
@@ -275,10 +295,10 @@ namespace Polynomial {
      * @param b: initial coefficient
      * @param x: array of linear factors    [n]
      */
-    LinFac(int deg, float b, float x[]) {
+    LinFac(int deg, T b, T x[]) {
       this->n = deg;
       this->b = b;
-      this->x = new float[deg];
+      this->x = new T[deg];
       for (int i = 0; i < deg; i++) {
         this->x[i] = x[i];
       }
@@ -290,9 +310,9 @@ namespace Polynomial {
     /**
      * Multiplication with a constant is in O(1).
      */
-    LinFac& operator *(float m) {
-      float b = m * this->b;
-      float *x = new float[this->getDegree()];
+    LinFac& operator *(T m) {
+      T b = m * this->b;
+      T *x = new T[this->getDegree()];
       for (int i = 0; i < this->getDegree(); i++) {
         x[i] = this->getFactors()[i];
       }
@@ -308,8 +328,8 @@ namespace Polynomial {
      */
     LinFac& operator *(LinFac &p) {
       int multDeg = p.getDegree() + this->getDegree();
-      float *x = new float[multDeg];
-      float b = p.getConstantFactor() * this->getConstantFactor();
+      T *x = new T[multDeg];
+      T b = p.getConstantFactor() * this->getConstantFactor();
       LinFac *retVal = new LinFac(multDeg, b, x);
       return *retVal;
     }
@@ -338,8 +358,8 @@ namespace Polynomial {
     /**
      * Evaluation can be done in O(n) in linear factors form.
      */
-    float eval(float x) {
-      float retVal = this->getConstantFactor();
+    T eval(T x) {
+      T retVal = this->getConstantFactor();
       for (int i = 0; i < this->getDegree(); i++) {
         retVal *= (x - this->getFactors()[i]);
       }
@@ -361,15 +381,21 @@ namespace Polynomial {
       std::cout << std::flush;
     }
 
-    float* getFactors() { return this->x; }
-    float getConstantFactor() { return this->b; }
+    T* getFactors() { return this->x; }
+    T getConstantFactor() { return this->b; }
 
   private:
     /* product of linear factors */
-    float b = 0, *x = nullptr;
+    T b = 0, *x = nullptr;
   };
 
-  class PV : virtual Polynomial {
+  /**
+   * Point-value representation of a polynomial.
+   * Any polynomial of degree n is uniquely defined by
+   * n+1 pairs (x_i,p(x_i)), where i = 0,..,n and x_i != x_j for i != j
+   */
+  template<typename T>
+  class PV : public virtual Polynomial {
   public:
     /**
      * Constructor for point-value representation
@@ -380,25 +406,45 @@ namespace Polynomial {
      * @param v: array of x_i values        [n+1]
      * @param y: array of p(x_i) values     [n+1]
      */
-    PV(int deg, float v[], float y[]);
+    PV(int deg, T v[], T y[]) {
+      this->n = deg;
+      this->v = new T[deg+1];
+      this->y = new T[deg+1];
+      for (int i = 0; i <= deg; i++) {
+        this->v[i] = v[i];
+        this->y[i] = y[i];
+      }
+    }
+    ~PV() {
+      delete[] this->v;
+      delete[] this->y;
+    }
 
+    /**
+     *  Addition with another polynomial is in O(n)
+     *  add the y values.
+     */
+    PV& operator +(const PV &p) {
+      int maxDegree = std::max(this->getDegree(), p.getDegree());
+      T values_sum = new T[maxDegree];
+
+    }
     /* TODO: addition O(n), multiplication O(n), evaluation ?, substraction O(n) */
     /* operations on polynomials */
-    Polynomial& operator +(const Polynomial &p);
-    Polynomial& operator -(const Polynomial &p);
-    Polynomial& operator *(const Polynomial &p);
-    bool operator ==(const Polynomial &p);
+    PV& operator -(const PV &p);
+    PV& operator *(const PV &p);
+    bool operator ==(const PV &p);
 
-    float eval(float x);
+    T eval(T x);
 
     /* interpolate */
-    Coef& toCoef();
+    Coef<T>& toCoef();
 
   private:
     /* point-value representation */
-    float *v = nullptr, *y = nullptr;
+    T *v = nullptr, *y = nullptr;
 
-    Coef& interpolate();
+    Coef<T>& interpolate();
   };
 
 
@@ -415,11 +461,37 @@ namespace Polynomial {
    * @param p,q : polynomials in coefficient form
    * @return p*q : multiplication of p and q in coefficient form
    */
-  Coef& mult_fft(Coef& p, Coef& q) {
-    // TODO
-    return *(new Coef(0,nullptr));
+  template <typename U>
+  Coef<U>& mult_fft(Coef<U> &p, Coef<U> &q) {
+    int maxDegree = std::max(p.getDegree(), q.getDegree());
+    /* compute the next power of 2 since fft will be called with a power of 2 */
+    int nextPowTwo = std::pow(2, std::ceil(std::log2(maxDegree)));
+    /* convert p,q to point-value representations using FFT
+     * so we get 2n point-value pairs
+     *  y_p: values of poly p
+     *  y_q: values of poly q
+     *  x: corresponding x values
+     */
+    comp *y_p = new comp[nextPowTwo];
+    comp *y_q = new comp[nextPowTwo];
+    comp *x = new comp[nextPowTwo];
+    y_p = p.fft(nextPowTwo);   // O(2nlog2n)
+    y_q = p.fft(nextPowTwo);   // O(2nlog2n)
+    comp w_2n = getRootUnity(nextPowTwo);
+    comp current = 1;
+    /* O(2n) */
+    for (int i = 0; i < nextPowTwo; i++) {
+      x[0] = current;
+      current *= w_2n;
+    }
+    PV<comp> *pp = new PV<comp>(nextPowTwo, x, y_p);
+    PV<comp> *qq = new PV<comp>(nextPowTwo, x, y_q);
+    /* pointwise multiplication in O(2n) */
+    PV<comp> res = *pp * *qq;
+    /* interpolation via FFT in O(2nlog2n) */
+    Coef<U> &retVal = res.toCoef();
+    return retVal;
   }
 }
-
 
 #endif
