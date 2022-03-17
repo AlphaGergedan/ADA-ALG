@@ -71,15 +71,15 @@ namespace Polynomial {
     /**
      * Multiplication with a constant is in O(n).
      */
-    Coef& operator *(T m) {
+    Coef<T>& operator *(T m) {
       T *a = new T[this->getDegree()+1];
       for (int i = 0; i <= this->getDegree(); i++) {
         a[i] *= this->getCoefs()[i] * m;
       }
-      Coef *retVal = new Coef(this->getDegree(), a);
+      Coef<T> *retVal = new Coef<T>(this->getDegree(), a);
       return *retVal;
     }
-    Coef& operator -() {
+    Coef<T>& operator -() {
       return (*this) * (-1);
     }
 
@@ -87,7 +87,7 @@ namespace Polynomial {
      * Addition in coefficient form is in O(maxDegree).
      * Simply add the coefficients.
      */
-    Coef& operator +(Coef &p) {
+    Coef<T>& operator +(Coef<T> &p) {
       int maxDegree = std::max(this->getDegree(), p.getDegree());
       int minDegree = std::min(this->getDegree(), p.getDegree());
       float *a = new T[maxDegree+1];
@@ -110,7 +110,7 @@ namespace Polynomial {
           i++;
         }
       }
-      Coef *retVal = new Coef(maxDegree, a);
+      Coef<T> *retVal = new Coef<T>(maxDegree, a);
       return *retVal;
     }
 
@@ -119,9 +119,9 @@ namespace Polynomial {
      * of polynomials can be done in linear time, therefore substraction is also
      * in O(maxDegree);
      */
-    Coef& operator -(Coef &p) {
-      Coef &pNeg = -p;
-      Coef &retVal = (*this) + pNeg;
+    Coef<T>& operator -(Coef<T> &p) {
+      Coef<T> &pNeg = -p;
+      Coef<T> &retVal = (*this) + pNeg;
       delete &pNeg;
       return retVal;
     }
@@ -129,7 +129,7 @@ namespace Polynomial {
     /**
      * Naive poly multiplication is in O(n^2).
      */
-    Coef& operator *(Coef &p) {
+    Coef<T>& operator *(Coef<T> &p) {
       /* compute the degree */
       int multDegree = this->getDegree() + p.getDegree();
       T *a = new T[multDegree + 1];
@@ -141,14 +141,14 @@ namespace Polynomial {
           a[i+j] += p.getCoefs()[i] * this->getCoefs()[j];
         }
       }
-      Coef *retVal = new Coef(multDegree, a);
+      Coef<T> *retVal = new Coef<T>(multDegree, a);
       return *retVal;
     }
 
     /**
      * Compares the coefficients and degrees, returns true if they match
      */
-    bool operator ==(Coef &p) {
+    bool operator ==(Coef<T> &p) {
       if (this->getDegree() != p.getDegree()) {
         return false;
       }
@@ -244,7 +244,7 @@ namespace Polynomial {
       }
       /* split even and odd coefficients in O(n) */
       T *a_even = new T[n/2];
-      T*a_odd = new T[n/2];
+      T *a_odd = new T[n/2];
       int cnt = 0;
       for (int i = 0; i < n; i++) {
         // odd
@@ -304,41 +304,41 @@ namespace Polynomial {
       }
     }
     ~LinFac() {
-      delete this->x;
+      delete[] this->x;
     }
 
     /**
      * Multiplication with a constant is in O(1).
      */
-    LinFac& operator *(T m) {
+    LinFac<T>& operator *(T m) {
       T b = m * this->b;
       T *x = new T[this->getDegree()];
       for (int i = 0; i < this->getDegree(); i++) {
         x[i] = this->getFactors()[i];
       }
-      LinFac *retVal = new LinFac(this->getDegree(), b, x);
+      LinFac<T> *retVal = new LinFac<T>(this->getDegree(), b, x);
       return *retVal;
     }
-    LinFac& operator -() {
+    LinFac<T>& operator -() {
       return (*this) * (-1);
     }
 
     /**
      * Polynomial multiplication is in O(1).
      */
-    LinFac& operator *(LinFac &p) {
+    LinFac<T>& operator *(LinFac<T> &p) {
       int multDeg = p.getDegree() + this->getDegree();
       T *x = new T[multDeg];
       T b = p.getConstantFactor() * this->getConstantFactor();
-      LinFac *retVal = new LinFac(multDeg, b, x);
+      LinFac<T> *retVal = new LinFac<T>(multDeg, b, x);
       return *retVal;
     }
 
     /**
      * Compares the coefficients and degrees, returns true if they match
      */
-    bool operator ==(LinFac &p) {
-      LinFac &q = *this;
+    bool operator ==(LinFac<T> &p) {
+      LinFac<T> &q = *this;
       if (q.getDegree() != p.getDegree() ||
           q.getConstantFactor() != p.getConstantFactor()) {
         return false;
@@ -403,14 +403,22 @@ namespace Polynomial {
      * n+1 pairs (x_i,p(x_i)), where i = 0,..,n and x_i != x_j for i != j
      *
      * @param deg: degree of the polynomial (n)
-     * @param v: array of x_i values        [n+1]
-     * @param y: array of p(x_i) values     [n+1]
+     * @param numOfPoints: number of point-value pairs (should be at least n+1)
+     * @param v: array of x_i values        [numOfPoints]
+     * @param y: array of p(x_i) values     [numOfPoints]
      */
-    PV(int deg, T v[], T y[]) {
+    PV(int deg, int numOfPoints, T v[], T y[]) {
+      if (numOfPoints < deg + 1) {
+        std::cout << "ERROR: Not enough point-value pairs! At least " << deg+1
+                  << " point-value pairs required to represent a polynomial of degree " << deg
+                  << std::endl;
+        std::exit(1);
+      }
+      this->numOfPoints = numOfPoints;
       this->n = deg;
-      this->v = new T[deg+1];
-      this->y = new T[deg+1];
-      for (int i = 0; i <= deg; i++) {
+      this->v = new T[numOfPoints];
+      this->y = new T[numOfPoints];
+      for (int i = 0; i < numOfPoints; i++) {
         this->v[i] = v[i];
         this->y[i] = y[i];
       }
@@ -421,37 +429,133 @@ namespace Polynomial {
     }
 
     /**
-     *  Addition with another polynomial is in O(n)
-     *  add the y values.
+     *  Multiplication is in O(n) if degrees are same (same x values)
+     *  multiply the y values.
+     *
+     *  condition: same degree, same points
      */
-    PV& operator +(const PV &p) {
-      int maxDegree = std::max(this->getDegree(), p.getDegree());
-      T values_sum = new T[maxDegree];
-
+    PV<T>& operator *(const PV<T> &p) {
+      if (this->getDegree() != p.getDegree()) {
+        std::cout << "ERROR (PV): different degree!" << std::endl;
+        std::exit(1);
+      }
+      int minNumOfPoints = std::min(this->getNumOfPoints(), p.getNumOfPoints());
+      T values_prod = new T[minNumOfPoints];
+      T points = new T[minNumOfPoints];
+      bool error = false;
+      /* O(n) */
+      for (int i = 0; i < minNumOfPoints; i++) {
+        T p_tmp = p->getX()[i];
+        T q_tmp = this->getX()[i];
+        error = error || (p_tmp != q_tmp);
+        points[i] = p_tmp;
+        values_prod[i] = p.getY()[i] + this->getY()[i];
+      }
+      PV<T> *retVal = new PV<T>(this->getDegree(), minNumOfPoints, points, values_prod);
+      return *retVal;
     }
-    /* TODO: addition O(n), multiplication O(n), evaluation ?, substraction O(n) */
-    /* operations on polynomials */
-    PV& operator -(const PV &p);
-    PV& operator *(const PV &p);
-    bool operator ==(const PV &p);
 
-    T eval(T x);
+    /**
+     * Multiplication with constant is O(n), multiply the y values
+     */
+    PV<T>& operator *(const T k) {
+      T points = new T[this->numOfPoints];
+      T values_prod = new T[this->numOfPoints];
+      /* O(n) */
+      for (int i = 0; i < this->numOfPoints; i++) {
+        points[i] = this->getX()[i];
+        values_prod[i] = this->getY()[i] * k;
+      }
+      PV<T> *retVal = new PV<T>(this->getDegree(), this->numOfPoints, points, values_prod);
+      return *retVal;
+    }
 
-    /* interpolate */
-    Coef<T>& toCoef();
+    /**
+     * Same as multiplication with -1.
+     */
+    PV<T>& operator -() {
+      return *this * -1;
+    }
+
+    /**
+     *  Addition with another polynomial is in O(n) if degrees are same (same x values)
+     *  add the y values.
+     *
+     *  Condition: same degree, same points
+     */
+    PV<T>& operator +(const PV<T> &p) {
+      if (this->getDegree() != p.getDegree()) {
+        std::cout << "ERROR (PV): different degree!" << std::endl;
+        std::exit(1);
+      }
+      int minNumOfPoints = std::min(this->getNumOfPoints(), p.getNumOfPoints());
+      T values_sum = new T[minNumOfPoints];
+      T points = new T[minNumOfPoints];
+      bool error = false;
+      /* O(n) */
+      for (int i = 0; i < minNumOfPoints; i++) {
+        T p_tmp = p->getX()[i];
+        T q_tmp = this->getX()[i];
+        error = error || (p_tmp != q_tmp);
+        points[i] = p_tmp;
+        values_sum[i] = p.getY()[i] + this->getY()[i];
+      }
+      PV<T> *retVal = new PV<T>(this->getDegree(), minNumOfPoints, points, values_sum);
+      return *retVal;
+    }
+
+    /**
+     * Same as multiplying with constant + addition
+     */
+    PV& operator -(const PV<T> &p) {
+      return (*this + (-p));
+    }
+
+    /**
+     * Compares degree and values, returns true if polynomials are equal.
+     *
+     * Condition: same x values
+     */
+    bool operator ==(const PV<T> &p) {
+      bool isEqual = true;
+      isEqual = isEqual && (p.getDegree() == this->getDegree());
+      int minNumPoints = std::min(this->getNumOfPoints(), p.getNumOfPoints());
+      for (int i = 0; i < minNumPoints; i++) {
+        isEqual = isEqual && (p.getX[i] == this->getX[i]) && (p.getY()[i] == this->getY()[i]);
+      }
+      return isEqual;
+    }
+
+    /* converts to coefficient representation */
+    Coef<T>& toCoef() {
+      return this->interpolate();
+    }
+
+    T* getX() { return this->v; };
+    T* getY() { return this->y; };
+    int getNumOfPoints() { return this->numOfPoints; }
 
   private:
     /* point-value representation */
     T *v = nullptr, *y = nullptr;
+    int numOfPoints;
 
-    Coef<T>& interpolate();
+    /**
+     * Interpolate using FFT in O(nlogn)
+     * TODO
+     */
+    Coef<T>& interpolate() {
+      // TODO
+      Coef<T> *retVal;
+      return *retVal;
+    }
   };
 
 
   /**
    * Polynomial multiplication using FFT
    *
-   * 1. Computes DFT of p = (p(w^0),p(w^1),..,p(w^n-1))
+   * 1. Computes DFT_2n-2 of p = (p(w^0),p(w^1),..,p(w^2n-1))
    *    which converts coefficient representation to
    *    point-value representation using FFT, O(nlogn)
    * 2. Do multiplication in point-value representation, O(n)
@@ -464,8 +568,9 @@ namespace Polynomial {
   template <typename U>
   Coef<U>& mult_fft(Coef<U> &p, Coef<U> &q) {
     int maxDegree = std::max(p.getDegree(), q.getDegree());
+    int eval_number = 2*maxDegree - 2; // required num of evaluations
     /* compute the next power of 2 since fft will be called with a power of 2 */
-    int nextPowTwo = std::pow(2, std::ceil(std::log2(maxDegree)));
+    int nextPowTwo = std::pow(2, std::ceil(std::log2(eval_number)));
     /* convert p,q to point-value representations using FFT
      * so we get 2n point-value pairs
      *  y_p: values of poly p
@@ -484,8 +589,8 @@ namespace Polynomial {
       x[0] = current;
       current *= w_2n;
     }
-    PV<comp> *pp = new PV<comp>(nextPowTwo, x, y_p);
-    PV<comp> *qq = new PV<comp>(nextPowTwo, x, y_q);
+    PV<comp> *pp = new PV<comp>(p.getDegree(), nextPowTwo, x, y_p);
+    PV<comp> *qq = new PV<comp>(q.getDegree(), nextPowTwo, x, y_q);
     /* pointwise multiplication in O(2n) */
     PV<comp> res = *pp * *qq;
     /* interpolation via FFT in O(2nlog2n) */
