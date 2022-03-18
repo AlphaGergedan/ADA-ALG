@@ -4,6 +4,11 @@
 #include <ctime>
 
 /**
+ * only used for Miller Rabin primality test
+ */
+static bool isProbablyPrime_GLOBAL = true;;
+
+/**
  * Naively check if an odd number in the range [1, floor(sqrt(n))] divides n
  * If yes then n is not a prime, if no n is a prime.
  *
@@ -169,9 +174,61 @@ bool isPrime_nondet_randomized(uint64_t n) {
   return isProbablyPrime;
 }
 
-bool isPrime_MillerRabin(uint64_t n) {
-  // TODO
-  return false;
+/**
+ * Same as fast exponent but with checking if
+ * non-trivial square root mod n exists.
+ * Computes a^p mod n, sets isProbablyPrime to false if
+ * non-trivial square root mod n exists.
+ *
+ * @param a
+ * @param p
+ * @param n
+ * @return a^p mod n, sets isProbablyPrime accordingly
+ */
+uint64_t power(uint64_t a, uint64_t p, uint64_t n) {
+  if (p == 0) {
+    return 1;
+  }
+  /* If we assume p is even, we get:
+   * a^p mod n = a^(p/2) * a^(p/2) mod n
+   *           = ((a^(p/2)) mod n) * ((a^(p/2)) mod n) mod n */
+  uint64_t x = fastExp(a, p/2, n);
+  uint64_t res = (x*x) % n;
+  /* check if x^2 mod n = 1 and x != 1 and x != n-1 */
+  if (res == 1 && x != 1 && x != n-1) {
+    isProbablyPrime_GLOBAL = false;
+  }
+  /* Add the remaining power if p is odd */
+  if (!(p % 2 == 0)) {
+    res = (a * res) % n;
+  }
+  return res;
 }
 
-
+bool isPrime_MillerRabin(uint64_t n) {
+  bool isProbablyPrime;
+  if (n < 2) {
+    isProbablyPrime = false;
+  } else if (n == 2) {
+    isProbablyPrime = true;
+  } else {
+    isProbablyPrime = true;
+    /* n even ? */
+    if (n % 2 == 0) {
+      isProbablyPrime = false;
+    } else {
+        /* up to this point all the checks can be done in constant time */
+        /* a in the range [2, n-1] uniformly at random */
+        uint64_t a = generateRandom(2, n-1);
+        /* a^n-1 mod n */
+        uint64_t z = power(a, n-1, n);
+        if (z != 1 || !isProbablyPrime_GLOBAL) {
+          isProbablyPrime = false;
+        }
+        else {
+          isProbablyPrime = true;
+        }
+    }
+  }
+  return isProbablyPrime;
+}
