@@ -62,3 +62,27 @@ Operations on Treaps:
 ## Minimum-Cut Algorithms
 
 ## Algorithms for SuffixTrees
+
+Construction of suffix trees
+- naive implementation O(n^2)
+- The algorithm MCC O(n)
+
+## Fibonacci Heap
+
+Cut when second child is lost, or when k-th child is lost.
+
+## Dynamic Programming
+
+Fibonacci
+
+weighted interval partitioning
+
+matrix multiplication order
+
+longest common subsequence of two strings
+
+monochromatic sequence
+
+Subset sum / Knapsack
+
+
