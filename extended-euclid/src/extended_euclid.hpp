@@ -2,6 +2,7 @@
 #define EXT_EUC_HPP
 
 #include <tuple>
+#include <gmp.h>
 
 /**
  * Extended Euclid Algorithm : O(log n). Naive GCD is in O(n).
@@ -14,5 +15,6 @@
  *         a and b, x and y are two integers with x*a + y*b = GCD(a,b)
  */
 std::tuple<int,int,int> extendedEuclid(int a, int b);
+void extendedEuclid(mpz_t a, mpz_t b, mpz_t gcd, mpz_t x, mpz_t y);
 
 #endif

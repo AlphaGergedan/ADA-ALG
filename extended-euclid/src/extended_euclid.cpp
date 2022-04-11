@@ -23,3 +23,6 @@ std::tuple<int,int,int> extendedEuclid(int a, int b) {
   int y = std::get<1>(rec) - (a/b)*x;
   return std::make_tuple(std::get<0>(rec), x, y);
 }
+
+/** overload for RSA */
+void extendedEuclid(mpz_t a, mpz_t b, mpz_t gcd, mpz_t x, mpz_t y) { /* TODO */ }
