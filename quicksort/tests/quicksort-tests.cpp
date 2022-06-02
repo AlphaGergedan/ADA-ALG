@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 #include <algorithm>
+#include <random>
+#include <cstdlib>
+#include <ctime>
 
 #include "../src/quicksort.hpp"
 
@@ -7,10 +10,41 @@
 
 #define SIZE(array) (sizeof(array) / sizeof(array[0]))
 
+static bool seedDone = false;
+
 void ArrayComparison(int *arr1, int *arr2, int size) {
   for (int i = 0; i < size; i++)
     EXPECT_EQ(arr1[i], arr2[i]) << "Arrays differ at index " << i;
 }
+
+/**
+ * Generates random int.
+ * @param a : int
+ * @param b : int
+ * @return random int in [a,b]
+ */
+uint64_t generateRandomInt(uint64_t a, uint64_t b) {
+  std::random_device dev;
+  std::mt19937 rng(dev()); // A Mersenne Twister pseudo-random generator
+  std::uniform_int_distribution<std::mt19937::result_type> range(a,b); // distribution in range [a,b]
+  return range(rng);
+}
+
+/**
+ * Generates random double.
+ * @param a : double
+ * @param b : double
+ * @return random double in [a,b]
+ */
+double generateRandomDouble(double a, double b) {
+  if (!seedDone) {
+    srand(static_cast <unsigned> (time(0)));
+    seedDone = true;
+  }
+  double randomDouble = a + static_cast<double>(rand()) / ( static_cast<double>(RAND_MAX/(b - a)) );
+  return randomDouble;
+}
+
 
 TEST(QuicksortTest, HandlesEmptyArray) {
   // init the array
