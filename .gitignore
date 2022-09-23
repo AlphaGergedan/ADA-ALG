@@ -1,0 +1,9 @@
+bazel-ADA-ALG
+bazel-bin
+bazel-out
+bazel-testlogs
+
+bazel-ADA-ALG/*
+bazel-bin/*
+bazel-out/*
+bazel-testlogs/*
