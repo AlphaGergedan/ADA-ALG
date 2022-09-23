@@ -1,5 +1,5 @@
-#ifndef POLY_HPP
-#define POLY_HPP
+#ifndef POLY_H
+#define POLY_H
 
 #include <algorithm>
 #include <iostream>
@@ -597,6 +597,6 @@ namespace Polynomial {
     Coef<U> &retVal = res.toCoef();
     return retVal;
   }
-}
+} // namespace Polynomial
 
-#endif
+#endif // POLY_H

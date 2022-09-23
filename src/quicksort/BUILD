@@ -2,7 +2,7 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 cc_library(
     name = "quicksort",
-    srcs = ["//src/quicksort/src/quicksort.cc"],
+    srcs = ["src/quicksort.cc"],
     hdrs = ["src/quicksort.h"]
 )
 

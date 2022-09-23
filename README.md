@@ -9,6 +9,8 @@ Implementations of the following advanced algorithms.
 Given a list of integers return the sorted list. Implementation:
 - Mergesort (TODO)
 - Quicksort: Sorting by partitioning `./quicksort`
+- Before you use, build it with `bazel build //src/quicksort:quicksort`
+- `bazel build //src/quicksort:quicksort-run` for building an example execution.
 
 ### Closest Pair Problem
 
@@ -35,6 +37,8 @@ Representation of Polynomials
 - Point-Value Representation
 
 Fast Fourier Transform (FFT)
+
+- `bazel build //src/fft:fft` (header only lib)
 
 ## Randomized Algortihms
 
