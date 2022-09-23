@@ -1,5 +1,5 @@
 #include <iostream>
-#include "quicksort.hpp"
+#include "src/quicksort/src/quicksort.h"
 
 void print_array(int arr[], int n) {
     std::cout << "[";

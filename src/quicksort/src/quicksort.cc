@@ -1,4 +1,4 @@
-#include "quicksort.hpp"
+#include "src/quicksort/src/quicksort.h"
 
 /**
  * Swaps two numbers given by their indices i and j
